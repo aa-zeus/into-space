@@ -36,3 +36,52 @@ const { title, description, image = '/placeholder-social.jpg' } = Astro.props;
 <meta property="twitter:title" content={title} />
 <meta property="twitter:description" content={description} />
 <meta property="twitter:image" content={new URL(image, Astro.url)} />
+
+<script is:inline>
+  window.theme = (function initTheme(key) {
+    let useSystemPreference = true;
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+
+    let _theme;
+
+    if ((_theme = window.localStorage.getItem(key)) !== null) {
+      if (['dark', 'light'].includes(_theme)) {
+        useSystemPreference = false;
+      } else {
+        window.localStorage.removeItem(key);
+      }
+    }
+
+    if (useSystemPreference) {
+      _theme = mql.matches ? 'dark' : 'light';
+    }
+
+    update(_theme);
+
+    mql.addEventListener('change', (ev) => {
+      if (useSystemPreference) {
+        _theme = ev.matches ? 'dark' : 'light';
+        update(_theme);
+      }
+    });
+
+    function update(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    }
+
+    return {
+      get current() {
+        return _theme;
+      },
+      set current(theme) {
+        _theme = theme;
+        update(_theme);
+        window.localStorage.setItem(key, _theme);
+      },
+    };
+  })((window.THEME_KEY = window.THEME_KEY || 'theme'));
+</script>
